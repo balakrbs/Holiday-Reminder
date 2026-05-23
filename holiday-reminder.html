@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Holiday Reminder Control Center</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+<style>
+  :root {
+    --bg: #0b0f1a;
+    --surface: #111827;
+    --surface2: #1a2236;
+    --surface3: #212d42;
+    --border: rgba(255,255,255,0.07);
+    --accent: #4f8ef7;
+    --accent2: #a78bfa;
+    --accent3: #34d399;
+    --accent4: #fb923c;
+    --accent5: #f472b6;
+    --text: #e8edf7;
+    --text2: #8b98b8;
+    --text3: #4a5568;
+    --danger: #f87171;
+    --glow: rgba(79,142,247,0.18);
+    --glow2: rgba(167,139,250,0.15);
+    --sidebar-w: 240px;
+    --sidebar-w-collapsed: 68px;
+    --radius: 16px;
+    --radius-sm: 10px;
+    --transition: 0.28s cubic-bezier(.4,0,.2,1);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    overflow-x: hidden;
+  }
+
+  /* ── Noise overlay ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: var(--sidebar-w);
+    min-height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 100;
+    transition: width var(--transition);
+    overflow: hidden;
+  }
+  .sidebar.collapsed { width: var(--sidebar-w-collapsed); }
+  .sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 24px 18px 20px;
+    border-bottom: 1px solid var(--border);
+    min-height: 76px;
+    flex-shrink: 0;
+    transition: padding var(--transition), justify-content var(--transition);
+  }
+  .logo-icon {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+    box-shadow: 0 0 20px var(--glow);
+  }
+  .logo-text {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 13.5px;
+    line-height: 1.2;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    max-width: 180px;
+    opacity: 1;
+    transition: opacity var(--transition), max-width var(--transition);
+  }
+  .sidebar.collapsed .logo-text { opacity: 0; width: 0; max-width: 0; }
+  .sidebar.collapsed .sidebar-logo { justify-content: center; padding: 24px 0 20px; }
+
+  .sidebar-nav { flex: 1; padding: 16px 10px; display: flex; flex-direction: column; gap: 4px; }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    color: var(--text2);
+    font-size: 14px;
+    font-weight: 500;
+    transition: background var(--transition), color var(--transition), padding var(--transition);
+    white-space: nowrap;
+    position: relative;
+    user-select: none;
+    overflow: hidden;
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active {
+    background: linear-gradient(135deg, rgba(79,142,247,0.18), rgba(167,139,250,0.12));
+    color: var(--accent);
+    border: 1px solid rgba(79,142,247,0.2);
+  }
+  .nav-item .nav-icon {
+    font-size: 16px;
+    width: 20px;
+    min-width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  /* Center icon when sidebar is collapsed */
+  .sidebar.collapsed .nav-item {
+    justify-content: center;
+    padding: 11px 0;
+    gap: 0;
+  }
+  .nav-label {
+    transition: opacity var(--transition), max-width var(--transition);
+    overflow: hidden;
+    max-width: 140px;
+    opacity: 1;
+  }
+  .sidebar.collapsed .nav-label { opacity: 0; max-width: 0; }
+  .nav-badge {
+    margin-left: auto;
+    background: var(--accent);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 20px;
+    flex-shrink: 0;
+    transition: opacity var(--transition);
+  }
+  .sidebar.collapsed .nav-badge { opacity: 0; }
+
+  .sidebar-footer {
+    padding: 14px 10px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .sidebar-toggle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    color: var(--text2);
+    font-size: 14px;
+    transition: background var(--transition), color var(--transition), padding var(--transition), justify-content var(--transition);
+    user-select: none;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .sidebar-toggle:hover { background: var(--surface2); color: var(--text); }
+  .sidebar.collapsed .sidebar-toggle {
+    justify-content: center;
+    padding: 10px 0;
+    gap: 0;
+  }
+  .sidebar-toggle .toggle-icon {
+    font-size: 16px;
+    width: 20px;
+    min-width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .sidebar-toggle span {
+    display: inline-block;
+    overflow: hidden;
+    max-width: 140px;
+    opacity: 1;
+    transition: max-width var(--transition), opacity var(--transition);
+  }
+  .sidebar.collapsed .sidebar-toggle span {
+    max-width: 0;
+    opacity: 0;
+  }
+
+  /* ── Main ── */
+  .main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    min-height: 100vh;
+    transition: margin-left var(--transition);
+    position: relative;
+    z-index: 1;
+  }
+  .main.expanded { margin-left: var(--sidebar-w-collapsed); }
+
+  /* ── Topbar ── */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 32px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(11,15,26,0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 14px; }
+  .topbar-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: var(--text);
+  }
+  .topbar-subtitle { font-size: 12px; color: var(--text2); margin-top: 1px; }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .topbar-date {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 7px 14px;
+    font-size: 12.5px;
+    color: var(--text2);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 0 16px var(--glow);
+  }
+
+  /* ── Page Content ── */
+  .page { padding: 32px; display: none; animation: fadeIn .3s ease; }
+  .page.active { display: block; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Section heading ── */
+  .section-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .section-subtitle { font-size: 13.5px; color: var(--text2); margin-top: 4px; }
+
+  /* ── Grid helpers ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+  .mt { margin-top: 28px; }
+  .mt-sm { margin-top: 16px; }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px;
+    transition: transform .2s, box-shadow .2s;
+  }
+  .card:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.35); }
+
+  /* ── Reminder Window Card ── */
+  .reminder-card {
+    background: linear-gradient(135deg, rgba(79,142,247,0.12), rgba(167,139,250,0.10));
+    border: 1px solid rgba(79,142,247,0.25);
+    border-radius: var(--radius);
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    transition: transform .2s, box-shadow .2s;
+  }
+  .reminder-card:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(79,142,247,0.18); }
+  .reminder-card::before {
+    content: '';
+    position: absolute;
+    top: -30px; right: -30px;
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(79,142,247,0.2) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .reminder-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+  .reminder-time {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1;
+  }
+  .reminder-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 12px;
+    background: rgba(52,211,153,0.12);
+    border: 1px solid rgba(52,211,153,0.25);
+    color: var(--accent3);
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+  .reminder-tag i { font-size: 9px; }
+  .pulse-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--accent3);
+    box-shadow: 0 0 0 0 rgba(52,211,153,0.6);
+    animation: pulse 2s infinite;
+    display: inline-block;
+  }
+  @keyframes pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(52,211,153,0.6); }
+    70%  { box-shadow: 0 0 0 8px rgba(52,211,153,0); }
+    100% { box-shadow: 0 0 0 0 rgba(52,211,153,0); }
+  }
+
+  /* ── Next Event Card (dashboard hero) ── */
+  .next-event-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    transition: transform .2s, box-shadow .2s;
+  }
+  .next-event-card:hover { transform: translateY(-2px); box-shadow: 0 8px 40px rgba(0,0,0,0.4); }
+  .next-event-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, transparent 60%, rgba(167,139,250,0.06));
+    pointer-events: none;
+    border-radius: inherit;
+  }
+  .nec-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--text3);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .nec-label::before {
+    content: '';
+    display: inline-block;
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--accent2);
+  }
+  .nec-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .nec-date { font-size: 13px; color: var(--text2); margin-bottom: 14px; }
+  .nec-footer { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .nec-days {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--accent2);
+    line-height: 1;
+  }
+  .nec-days-label { font-size: 12px; color: var(--text2); }
+  .cat-badge {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 20px;
+    letter-spacing: .5px;
+  }
+
+  /* ── Stat Cards ── */
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: transform .2s, box-shadow .2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card:hover { transform: translateY(-2px); box-shadow: 0 6px 28px rgba(0,0,0,0.35); }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    bottom: -20px; right: -20px;
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    opacity: 0.08;
+  }
+  .stat-card:nth-child(1)::before { background: var(--accent); }
+  .stat-card:nth-child(2)::before { background: var(--accent3); }
+  .stat-card:nth-child(3)::before { background: var(--accent2); }
+  .stat-card:nth-child(4)::before { background: var(--accent5); }
+  .stat-icon {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+  .stat-value {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--text);
+  }
+  .stat-label { font-size: 12.5px; color: var(--text2); font-weight: 500; }
+  .stat-delta { font-size: 11px; }
+
+  /* ── Events Tab ── */
+  .events-topbar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .events-topbar-left { flex: 1; }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 10px 18px;
+    border-radius: var(--radius-sm);
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all .2s;
+    font-family: 'DM Sans', sans-serif;
+    white-space: nowrap;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), #6b9ff7);
+    color: #fff;
+    box-shadow: 0 4px 18px rgba(79,142,247,0.35);
+  }
+  .btn-primary:hover { box-shadow: 0 6px 24px rgba(79,142,247,0.5); transform: translateY(-1px); }
+  .btn-ghost {
+    background: var(--surface2);
+    color: var(--text2);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { background: var(--surface3); color: var(--text); }
+  .select-custom {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    border-radius: var(--radius-sm);
+    padding: 9px 14px;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    outline: none;
+    transition: border-color .2s;
+  }
+  .select-custom:focus { border-color: var(--accent); }
+  .select-custom option { background: var(--surface2); }
+
+  /* ── Event List ── */
+  .event-list { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+  .event-row {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: background .2s, transform .2s;
+    flex-wrap: wrap;
+  }
+  .event-row:hover { background: var(--surface2); transform: translateX(3px); }
+  .event-color-bar {
+    width: 4px;
+    height: 40px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  .event-name {
+    font-weight: 600;
+    font-size: 14.5px;
+    color: var(--text);
+    flex: 1;
+    min-width: 140px;
+  }
+  .event-date { font-size: 12.5px; color: var(--text2); display: flex; align-items: center; gap: 5px; min-width: 110px; }
+  .event-cat { min-width: 90px; }
+  .event-status { min-width: 90px; }
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+  .event-days { font-size: 13px; font-weight: 600; min-width: 80px; white-space: nowrap; }
+  .event-actions { display: flex; gap: 8px; flex-shrink: 0; }
+  .action-btn {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all .2s;
+  }
+  .action-btn:hover.edit { background: rgba(79,142,247,0.15); border-color: var(--accent); color: var(--accent); }
+  .action-btn:hover.delete { background: rgba(248,113,113,0.15); border-color: var(--danger); color: var(--danger); }
+
+  /* ── Category Colors ── */
+  .cat-holiday   { background: rgba(79,142,247,0.12); color: var(--accent);  border: 1px solid rgba(79,142,247,0.25); }
+  .cat-work      { background: rgba(52,211,153,0.12); color: var(--accent3); border: 1px solid rgba(52,211,153,0.25); }
+  .cat-personal  { background: rgba(167,139,250,0.12); color: var(--accent2);border: 1px solid rgba(167,139,250,0.25); }
+  .cat-deadline  { background: rgba(248,113,113,0.12); color: var(--danger);  border: 1px solid rgba(248,113,113,0.25); }
+  .cat-festival  { background: rgba(251,146,60,0.12); color: var(--accent4);  border: 1px solid rgba(251,146,60,0.25); }
+  .cat-birthday  { background: rgba(244,114,182,0.12); color: var(--accent5); border: 1px solid rgba(244,114,182,0.25); }
+
+  .bar-holiday  { background: var(--accent); }
+  .bar-work     { background: var(--accent3); }
+  .bar-personal { background: var(--accent2); }
+  .bar-deadline { background: var(--danger); }
+  .bar-festival { background: var(--accent4); }
+  .bar-birthday { background: var(--accent5); }
+
+  /* Status */
+  .status-upcoming  { background: rgba(79,142,247,0.12); color: var(--accent); }
+  .status-today     { background: rgba(52,211,153,0.12); color: var(--accent3); }
+  .status-completed { background: rgba(74,85,104,0.35); color: var(--text3); }
+
+  /* ── Modal ── */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.65);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; animation: fadeOverlay .2s ease; }
+  @keyframes fadeOverlay { from { opacity: 0; } to { opacity: 1; } }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+    width: 100%;
+    max-width: 480px;
+    position: relative;
+    animation: slideModal .25s cubic-bezier(.4,0,.2,1);
+    box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+  }
+  @keyframes slideModal {
+    from { opacity: 0; transform: translateY(20px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+  .modal-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+  }
+  .modal-close {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all .2s;
+  }
+  .modal-close:hover { background: var(--surface3); color: var(--text); }
+  .form-group { margin-bottom: 18px; }
+  .form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    color: var(--text2);
+    margin-bottom: 8px;
+  }
+  .form-control {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    padding: 11px 14px;
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .form-control:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(79,142,247,0.12);
+  }
+  .form-control::placeholder { color: var(--text3); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+
+  /* ── Toast ── */
+  .toast-wrap {
+    position: fixed;
+    bottom: 24px; right: 24px;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .toast {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 18px;
+    font-size: 13.5px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    animation: toastIn .3s ease;
+    max-width: 300px;
+  }
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  .toast.out { animation: toastOut .3s ease forwards; }
+  @keyframes toastOut {
+    to { opacity: 0; transform: translateX(20px); }
+  }
+  .toast-icon { font-size: 16px; }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 3px; }
+
+  /* ── Responsive ── */
+  @media (max-width: 900px) {
+    .grid-4 { grid-template-columns: 1fr 1fr; }
+    .grid-2 { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 640px) {
+    .sidebar { width: var(--sidebar-w-collapsed) !important; }
+    .main { margin-left: var(--sidebar-w-collapsed) !important; }
+    .logo-text, .nav-label, .nav-badge { opacity: 0; width: 0; }
+    .page { padding: 18px; }
+    .topbar { padding: 14px 18px; }
+    .grid-4 { grid-template-columns: 1fr 1fr; }
+    .event-row { gap: 10px; }
+    .event-date, .event-status { display: none; }
+  }
+  @media (max-width: 420px) {
+    .grid-4 { grid-template-columns: 1fr; }
+  }
+
+  /* ── Divider ── */
+  .divider { height: 1px; background: var(--border); margin: 24px 0; }
+
+  /* ── Empty state ── */
+  .empty-state {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--text2);
+  }
+  .empty-state i { font-size: 40px; opacity: 0.3; margin-bottom: 14px; display: block; }
+  .empty-state p { font-size: 14px; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════ SIDEBAR ═══════════════════ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">🎉</div>
+    <div class="logo-text">Holiday Reminder<br>Control Center</div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-item active" onclick="switchTab('dashboard', this)">
+      <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
+      <span class="nav-label">Dashboard</span>
+    </div>
+    <div class="nav-item" onclick="switchTab('events', this)">
+      <span class="nav-icon"><i class="fa-solid fa-calendar-days"></i></span>
+      <span class="nav-label">Events</span>
+      <span class="nav-badge" id="sidebarBadge">0</span>
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-toggle" onclick="toggleSidebar()">
+      <span class="toggle-icon"><i class="fa-solid fa-bars-staggered"></i></span>
+      <span>Collapse</span>
+    </div>
+  </div>
+</aside>
+
+<!-- ═══════════════════ MAIN ═══════════════════ -->
+<main class="main" id="main">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title" id="topbarTitle">Dashboard</div>
+      <div class="topbar-subtitle" id="topbarSub">Overview of all scheduled reminders</div>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-date">
+        <i class="fa-regular fa-calendar"></i>
+        <span id="todayDateStr"></span>
+      </div>
+      <div class="avatar" title="IT Team">IT</div>
+    </div>
+  </div>
+
+  <!-- ─── DASHBOARD TAB ─── -->
+  <div class="page active" id="tab-dashboard">
+    <!-- Header -->
+    <div>
+      <div class="section-title">👋 Welcome Back, IT Team</div>
+      <div class="section-subtitle">Here's a live snapshot of all your scheduled holidays and occasion reminders.</div>
+    </div>
+
+    <!-- Row 1: Reminder Window + Next Event -->
+    <div class="grid-2 mt">
+      <!-- Reminder Window -->
+      <div class="reminder-card">
+        <div class="reminder-label"><i class="fa-solid fa-bell"></i> &nbsp;Reminder Window</div>
+        <div class="reminder-time">9 AM – 10 AM</div>
+        <div class="reminder-tag">
+          <span class="pulse-dot"></span>
+          Daily trigger active
+        </div>
+        <p style="margin-top:14px; font-size:12.5px; color:var(--text2); line-height:1.6;">
+          Automated email reminders are dispatched every day within this window for all upcoming events.
+        </p>
+      </div>
+
+      <!-- Next Upcoming Event (Dashboard) -->
+      <div class="next-event-card" id="dashNextEvent">
+        <div class="nec-label">Next Upcoming Event</div>
+        <div class="nec-name" id="necName">—</div>
+        <div class="nec-date" id="necDate"><i class="fa-regular fa-clock"></i> &nbsp;—</div>
+        <div class="nec-footer">
+          <div>
+            <div class="nec-days" id="necDays">—</div>
+            <div class="nec-days-label">days remaining</div>
+          </div>
+          <span class="cat-badge" id="necCat">—</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 2: Stats -->
+    <div class="grid-4 mt">
+      <div class="stat-card">
+        <div class="stat-icon" style="background:rgba(79,142,247,0.14);color:var(--accent)">
+          <i class="fa-solid fa-layer-group"></i>
+        </div>
+        <div class="stat-value" id="statTotal">0</div>
+        <div class="stat-label">Total Events</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:rgba(52,211,153,0.14);color:var(--accent3)">
+          <i class="fa-solid fa-arrow-trend-up"></i>
+        </div>
+        <div class="stat-value" id="statUpcoming">0</div>
+        <div class="stat-label">Upcoming Events</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:rgba(167,139,250,0.14);color:var(--accent2)">
+          <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <div class="stat-value" id="statCompleted">0</div>
+        <div class="stat-label">Completed Events</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:rgba(244,114,182,0.14);color:var(--accent5)">
+          <i class="fa-solid fa-star"></i>
+        </div>
+        <div class="stat-value" id="statToday">0</div>
+        <div class="stat-label">Today's Events</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── EVENTS TAB ─── -->
+  <div class="page" id="tab-events">
+    <!-- Top: next upcoming -->
+    <div class="next-event-card" id="eventsNextEvent" style="margin-bottom:24px;">
+      <div class="nec-label">Next Upcoming Event</div>
+      <div class="nec-name" id="enecName">—</div>
+      <div class="nec-date" id="enecDate"><i class="fa-regular fa-clock"></i> &nbsp;—</div>
+      <div class="nec-footer">
+        <div>
+          <div class="nec-days" id="enecDays">—</div>
+          <div class="nec-days-label">days remaining</div>
+        </div>
+        <span class="cat-badge" id="enecCat">—</span>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="events-topbar">
+      <div class="events-topbar-left">
+        <div class="section-title">All Occasions</div>
+        <div class="section-subtitle">Manage, edit, or remove scheduled events</div>
+      </div>
+      <select class="select-custom" id="limitSelect" onchange="renderEventList()">
+        <option value="5">Show 5</option>
+        <option value="10" selected>Show 10</option>
+        <option value="20">Show 20</option>
+      </select>
+      <button class="btn btn-primary" onclick="openModal()">
+        <i class="fa-solid fa-plus"></i> Add Occasion
+      </button>
+    </div>
+
+    <!-- Event list -->
+    <div class="event-list" id="eventList"></div>
+  </div>
+
+</main>
+
+<!-- ═══════════════════ MODAL ═══════════════════ -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">✨ Add New Occasion</div>
+      <div class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Occasion Name</label>
+      <input class="form-control" type="text" id="fName" placeholder="e.g. Christmas Day" />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Date</label>
+        <input class="form-control" type="date" id="fDate" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Reminder Time</label>
+        <input class="form-control" type="time" id="fTime" value="09:00" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Category</label>
+      <select class="form-control" id="fCategory">
+        <option value="holiday">🌐 Holiday</option>
+        <option value="work">💼 Work</option>
+        <option value="personal">👤 Personal</option>
+        <option value="deadline">⏰ Deadline</option>
+        <option value="festival">🎊 Festival</option>
+        <option value="birthday">🎂 Birthday</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notes (optional)</label>
+      <textarea class="form-control" id="fNotes" rows="3" placeholder="Add a short note or description..."></textarea>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEvent()"><i class="fa-solid fa-floppy-disk"></i> Save Occasion</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+/* ══════════════════════════════════════════════
+   DATA
+══════════════════════════════════════════════ */
+const today = new Date(); today.setHours(0,0,0,0);
+
+function daysFrom(dateStr) {
+  const d = new Date(dateStr); d.setHours(0,0,0,0);
+  return Math.round((d - today) / 86400000);
+}
+function fmtDate(dateStr) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('en-US', { weekday:'short', year:'numeric', month:'short', day:'numeric' });
+}
+function getStatus(dateStr) {
+  const diff = daysFrom(dateStr);
+  if (diff < 0) return 'completed';
+  if (diff === 0) return 'today';
+  return 'upcoming';
+}
+
+/* Sample events */
+let events = [
+  { id:1,  name:'Independence Day',        date:'2025-07-04', category:'holiday',  time:'09:00', notes:'National public holiday.' },
+  { id:2,  name:'Quarterly Review',        date:'2025-07-15', category:'work',     time:'09:00', notes:'Q2 team performance review.' },
+  { id:3,  name:'Team Birthday — Sarah',   date:'2025-07-22', category:'birthday', time:'09:00', notes:'Office cake session at 3PM.' },
+  { id:4,  name:'System Upgrade Deadline', date:'2025-07-31', category:'deadline', time:'09:00', notes:'ERP system cutover deadline.' },
+  { id:5,  name:'Eid al-Adha',             date:'2025-06-06', category:'festival', time:'09:00', notes:'Public holiday — offices closed.' },
+  { id:6,  name:'Annual Leave — IT Head',  date:'2025-08-01', category:'personal', time:'09:00', notes:'Coverage plan required.' },
+  { id:7,  name:'Labor Day',               date:'2025-09-01', category:'holiday',  time:'09:00', notes:'Federal public holiday.' },
+  { id:8,  name:'Halloween',               date:'2025-10-31', category:'festival', time:'09:00', notes:'Office event optional.' },
+  { id:9,  name:'Thanksgiving',            date:'2025-11-27', category:'holiday',  time:'09:00', notes:'Offices closed Thu & Fri.' },
+  { id:10, name:'Christmas Day',           date:'2025-12-25', category:'holiday',  time:'09:00', notes:'Federal public holiday.' },
+  { id:11, name:'New Year\'s Day',         date:'2026-01-01', category:'holiday',  time:'09:00', notes:'New fiscal year begins.' },
+  { id:12, name:'Sprint Planning Q1',      date:'2026-01-05', category:'work',     time:'09:00', notes:'Kick-off sprint planning.' },
+];
+let nextId = 13;
+
+/* ══════════════════════════════════════════════
+   SIDEBAR TOGGLE
+══════════════════════════════════════════════ */
+let sidebarCollapsed = false;
+function toggleSidebar() {
+  sidebarCollapsed = !sidebarCollapsed;
+  document.getElementById('sidebar').classList.toggle('collapsed', sidebarCollapsed);
+  document.getElementById('main').classList.toggle('expanded', sidebarCollapsed);
+}
+
+/* ══════════════════════════════════════════════
+   TAB SWITCHING
+══════════════════════════════════════════════ */
+const tabMeta = {
+  dashboard: { title: 'Dashboard',  sub: 'Overview of all scheduled reminders' },
+  events:    { title: 'Events',     sub: 'Manage and schedule your occasions' },
+};
+function switchTab(name, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  el.classList.add('active');
+  document.getElementById('topbarTitle').textContent = tabMeta[name].title;
+  document.getElementById('topbarSub').textContent   = tabMeta[name].sub;
+  if (name === 'events') renderEventList();
+}
+
+/* ══════════════════════════════════════════════
+   NEXT UPCOMING EVENT
+══════════════════════════════════════════════ */
+function getNextEvent() {
+  const upcoming = events
+    .filter(e => daysFrom(e.date) >= 0)
+    .sort((a,b) => new Date(a.date) - new Date(b.date));
+  return upcoming[0] || null;
+}
+
+function catLabel(cat) {
+  return { holiday:'🌐 Holiday', work:'💼 Work', personal:'👤 Personal',
+           deadline:'⏰ Deadline', festival:'🎊 Festival', birthday:'🎂 Birthday' }[cat] || cat;
+}
+
+function renderNextEvent() {
+  const ev = getNextEvent();
+  ['', 'e'].forEach(prefix => {
+    const nameEl = document.getElementById(prefix + 'necName');
+    const dateEl = document.getElementById(prefix + 'necDate');
+    const daysEl = document.getElementById(prefix + 'necDays');
+    const catEl  = document.getElementById(prefix + 'necCat');
+    if (!nameEl) return;
+    if (!ev) {
+      nameEl.textContent = 'No upcoming events';
+      dateEl.innerHTML   = '';
+      daysEl.textContent = '—';
+      catEl.textContent  = '';
+      return;
+    }
+    nameEl.textContent = ev.name;
+    dateEl.innerHTML   = `<i class="fa-regular fa-clock"></i> &nbsp;${fmtDate(ev.date)}`;
+    const d = daysFrom(ev.date);
+    daysEl.textContent = d === 0 ? 'Today!' : d;
+    catEl.textContent  = catLabel(ev.category);
+    catEl.className    = `cat-badge cat-${ev.category}`;
+  });
+}
+
+/* ══════════════════════════════════════════════
+   STAT CARDS
+══════════════════════════════════════════════ */
+function renderStats() {
+  const total     = events.length;
+  const upcoming  = events.filter(e => daysFrom(e.date) > 0).length;
+  const completed = events.filter(e => daysFrom(e.date) < 0).length;
+  const todayEv   = events.filter(e => daysFrom(e.date) === 0).length;
+
+  animateCount('statTotal',     total);
+  animateCount('statUpcoming',  upcoming);
+  animateCount('statCompleted', completed);
+  animateCount('statToday',     todayEv);
+
+  document.getElementById('sidebarBadge').textContent = upcoming + todayEv;
+}
+
+function animateCount(id, target) {
+  const el = document.getElementById(id);
+  let current = 0;
+  const step = Math.ceil(target / 20) || 1;
+  const timer = setInterval(() => {
+    current = Math.min(current + step, target);
+    el.textContent = current;
+    if (current >= target) clearInterval(timer);
+  }, 40);
+}
+
+/* ══════════════════════════════════════════════
+   EVENT LIST
+══════════════════════════════════════════════ */
+function renderEventList() {
+  const limit = parseInt(document.getElementById('limitSelect').value);
+  const list  = document.getElementById('eventList');
+  const slice = events.slice(0, limit);
+
+  if (!slice.length) {
+    list.innerHTML = `<div class="empty-state"><i class="fa-regular fa-calendar-xmark"></i><p>No events found. Add your first occasion!</p></div>`;
+    return;
+  }
+
+  list.innerHTML = slice.map(ev => {
+    const diff   = daysFrom(ev.date);
+    const status = getStatus(ev.date);
+    const daysLabel = diff < 0 ? `${Math.abs(diff)}d ago` : diff === 0 ? 'Today' : `In ${diff}d`;
+    const statusLabel = { upcoming:'Upcoming', today:'Today', completed:'Completed' }[status];
+    return `
+    <div class="event-row" id="erow-${ev.id}">
+      <div class="event-color-bar bar-${ev.category}"></div>
+      <div class="event-name">${ev.name}</div>
+      <div class="event-date"><i class="fa-regular fa-calendar"></i> ${fmtDate(ev.date)}</div>
+      <div class="event-cat"><span class="cat-badge cat-${ev.category}">${catLabel(ev.category)}</span></div>
+      <div class="event-status"><span class="status-badge status-${status}">${statusLabel}</span></div>
+      <div class="event-days" style="color:${diff < 0 ? 'var(--text3)' : diff === 0 ? 'var(--accent3)' : 'var(--text2)'}">${daysLabel}</div>
+      <div class="event-actions">
+        <div class="action-btn edit" title="Edit" onclick="editEvent(${ev.id})"><i class="fa-solid fa-pen"></i></div>
+        <div class="action-btn delete" title="Delete" onclick="deleteEvent(${ev.id})"><i class="fa-solid fa-trash"></i></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════════════
+   MODAL
+══════════════════════════════════════════════ */
+let editingId = null;
+
+function openModal(ev = null) {
+  editingId = ev ? ev.id : null;
+  document.getElementById('fName').value     = ev ? ev.name     : '';
+  document.getElementById('fDate').value     = ev ? ev.date     : '';
+  document.getElementById('fTime').value     = ev ? ev.time     : '09:00';
+  document.getElementById('fCategory').value = ev ? ev.category : 'holiday';
+  document.getElementById('fNotes').value    = ev ? (ev.notes || '') : '';
+  document.querySelector('.modal-title').textContent = ev ? '✏️ Edit Occasion' : '✨ Add New Occasion';
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); editingId = null; }
+function closeModalOutside(e) { if (e.target === document.getElementById('modalOverlay')) closeModal(); }
+
+function saveEvent() {
+  const name = document.getElementById('fName').value.trim();
+  const date = document.getElementById('fDate').value;
+  const time = document.getElementById('fTime').value;
+  const cat  = document.getElementById('fCategory').value;
+  const notes= document.getElementById('fNotes').value.trim();
+
+  if (!name) { showToast('⚠️', 'Please enter an occasion name.', '#fb923c'); return; }
+  if (!date) { showToast('⚠️', 'Please select a date.', '#fb923c'); return; }
+
+  if (editingId) {
+    const idx = events.findIndex(e => e.id === editingId);
+    if (idx !== -1) events[idx] = { ...events[idx], name, date, time, category: cat, notes };
+    showToast('✅', 'Occasion updated successfully!', 'var(--accent3)');
+  } else {
+    events.push({ id: nextId++, name, date, time, category: cat, notes });
+    showToast('🎉', 'Occasion added successfully!', 'var(--accent)');
+  }
+
+  closeModal();
+  refresh();
+}
+
+function editEvent(id) {
+  const ev = events.find(e => e.id === id);
+  if (ev) openModal(ev);
+}
+
+function deleteEvent(id) {
+  const row = document.getElementById('erow-' + id);
+  if (row) { row.style.opacity = '0'; row.style.transform = 'translateX(20px)'; row.style.transition = 'all .25s'; }
+  setTimeout(() => {
+    events = events.filter(e => e.id !== id);
+    refresh();
+    showToast('🗑️', 'Event removed.', 'var(--danger)');
+  }, 260);
+}
+
+/* ══════════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════════ */
+function showToast(icon, msg, color = 'var(--accent)') {
+  const wrap = document.getElementById('toastWrap');
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.innerHTML = `<span class="toast-icon" style="color:${color}">${icon}</span>${msg}`;
+  wrap.appendChild(toast);
+  setTimeout(() => {
+    toast.classList.add('out');
+    setTimeout(() => toast.remove(), 320);
+  }, 3000);
+}
+
+/* ══════════════════════════════════════════════
+   REFRESH ALL
+══════════════════════════════════════════════ */
+function refresh() {
+  renderStats();
+  renderNextEvent();
+  renderEventList();
+}
+
+/* ══════════════════════════════════════════════
+   TODAY DATE
+══════════════════════════════════════════════ */
+function setTodayDate() {
+  document.getElementById('todayDateStr').textContent =
+    new Date().toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric', year:'numeric' });
+}
+
+/* ══════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════ */
+setTodayDate();
+refresh();
+</script>
+</body>
+</html>
