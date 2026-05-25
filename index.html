@@ -8,6 +8,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+<script>
+  const API_URL = "https://script.google.com/macros/s/AKfycbz9TaNR2iMbVLrvO_nH1NoNJwA0FXA2imSEjIIacrQygVehOoxTfKepdmlhLZRuoCoioQ/exec";
+</script>
 <style>
 /* ════════════════════════════════════════
    VARIABLES
@@ -210,7 +213,7 @@ body::before {
 .hamburger:hover { background: var(--s3); color: var(--text); }
 .topbar-title {
   font-family: 'Space Grotesk', sans-serif;
-  font-weight: 700; font-size: 16px; color: var(--text);
+  font-weight: 700; font-size: 20px; color: var(--text);
   white-space: nowrap;
 }
 .topbar-sub { font-size: 11.5px; color: var(--text2); margin-top: 1px; white-space: nowrap; }
@@ -241,7 +244,7 @@ body::before {
    TYPOGRAPHY HELPERS
 ════════════════════════════════════════ */
 .sg { font-family: 'Space Grotesk', sans-serif; }
-.section-title { font-family: 'Space Grotesk', sans-serif; font-size: 21px; font-weight: 700; color: var(--text); }
+.section-title { font-family: 'Space Grotesk', sans-serif; font-size: 36px; font-weight: 700; color: var(--text); }
 .section-sub   { font-size: 13px; color: var(--text2); margin-top: 3px; }
 .mt  { margin-top: 26px; }
 .mt2 { margin-top: 16px; }
@@ -270,7 +273,7 @@ body::before {
   pointer-events: none;
 }
 .rc-label { font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.3px; color: var(--accent); margin-bottom: 10px; }
-.rc-time  { font-family: 'Space Grotesk', sans-serif; font-size: 27px; font-weight: 700; color: var(--text); line-height: 1; }
+.rc-time  { font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 700; color: var(--text); line-height: 1; }
 .rc-tag {
   display: inline-flex; align-items: center; gap: 6px; margin-top: 12px;
   background: rgba(52,211,153,0.11); border: 1px solid rgba(52,211,153,0.22);
@@ -311,7 +314,7 @@ body::before {
   color: var(--text3); margin-bottom: 14px;
 }
 .nec-chip::before { content:''; width:5px; height:5px; border-radius:50%; background:var(--purple); display:inline-block; flex-shrink:0; }
-.nec-name  { font-family:'Space Grotesk',sans-serif; font-size:19px; font-weight:700; color:var(--text); margin-bottom:5px; }
+.nec-name  { font-family:'Space Grotesk',sans-serif; font-size:24px; font-weight:700; color:var(--text); margin-bottom:5px; }
 .nec-date  { font-size:12.5px; color:var(--text2); margin-bottom:14px; display:flex; align-items:center; gap:6px; }
 .nec-foot  { display:flex; align-items:flex-end; gap:10px; flex-wrap:wrap; }
 .nec-days  { font-family:'Space Grotesk',sans-serif; font-size:30px; font-weight:700; color:var(--purple); line-height:1; }
@@ -582,7 +585,7 @@ body::before {
         <i class="fa-solid fa-bars"></i>
       </div>
       <div>
-        <div class="topbar-title" id="topbarTitle">Dashboard</div>
+        <div class="topbar-title" id="topbarTitle">Z System Intelligent Controld Private Limited</div>
         <div class="topbar-sub" id="topbarSub">Overview of all scheduled reminders</div>
       </div>
     </div>
@@ -669,9 +672,9 @@ body::before {
         <div class="section-sub">Manage, edit or remove scheduled events</div>
       </div>
       <select class="sel" id="limitSel" onchange="renderList()">
-        <option value="5">Show 5</option>
-        <option value="10" selected>Show 10</option>
-        <option value="20">Show 20</option>
+        <option value="20" selected>Show 20</option>
+        <option value="50">Show 50</option>
+        <option value="9999">Show All</option>
       </select>
       <button class="btn btn-primary" onclick="openModal()">
         <i class="fa-solid fa-plus"></i> Add Occasion
@@ -751,21 +754,67 @@ function catLabel(c) {
   return {holiday:'🌐 Holiday',work:'💼 Work',personal:'👤 Personal',deadline:'⏰ Deadline',festival:'🎊 Festival',birthday:'🎂 Birthday'}[c] || c;
 }
 
-let events = [
-  {id:1,  name:'Independence Day',        date:'2025-07-04', cat:'holiday',  time:'09:00', notes:'National public holiday.'},
-  {id:2,  name:'Quarterly Review',        date:'2025-07-15', cat:'work',     time:'09:00', notes:'Q2 team performance review.'},
-  {id:3,  name:'Team Birthday — Sarah',   date:'2025-07-22', cat:'birthday', time:'09:00', notes:'Office cake session at 3PM.'},
-  {id:4,  name:'System Upgrade Deadline', date:'2025-07-31', cat:'deadline', time:'09:00', notes:'ERP system cutover deadline.'},
-  {id:5,  name:'Eid al-Adha',             date:'2025-06-06', cat:'festival', time:'09:00', notes:'Public holiday.'},
-  {id:6,  name:'Annual Leave — IT Head',  date:'2025-08-01', cat:'personal', time:'09:00', notes:'Coverage plan required.'},
-  {id:7,  name:'Labor Day',               date:'2025-09-01', cat:'holiday',  time:'09:00', notes:'Federal public holiday.'},
-  {id:8,  name:'Halloween',               date:'2025-10-31', cat:'festival', time:'09:00', notes:'Office event optional.'},
-  {id:9,  name:'Thanksgiving',            date:'2025-11-27', cat:'holiday',  time:'09:00', notes:'Offices closed Thu & Fri.'},
-  {id:10, name:'Christmas Day',           date:'2025-12-25', cat:'holiday',  time:'09:00', notes:'Federal public holiday.'},
-  {id:11, name:'New Year\'s Day',         date:'2026-01-01', cat:'holiday',  time:'09:00', notes:'New fiscal year begins.'},
-  {id:12, name:'Sprint Planning Q1',      date:'2026-01-05', cat:'work',     time:'09:00', notes:'Kick-off sprint planning.'},
-];
-let nxtId = 13, editId = null;
+let events = [];
+let nxtId = 1;
+let editId = null;
+
+async function loadEvents() {
+
+  try {
+
+    const res = await fetch(`${API_URL}?action=getEvents`);
+    const data = await res.json();
+
+    events = data.map(ev => ({
+      id: ev.id,
+      date: ev.date,
+      day: ev.day,
+      name: ev.name,
+      cat: mapCategory(ev.category),
+      notes: ev.notes,
+      status: mapStatus(ev.status)
+    }));
+
+    nxtId = events.length + 1;
+
+    refresh();
+
+  } catch (err) {
+
+    console.error(err);
+
+    toast(
+      '❌',
+      'Failed to load spreadsheet data',
+      'var(--red)'
+    );
+  }
+}
+
+function mapCategory(cat) {
+
+  const c = cat.toLowerCase();
+
+  if (c.includes('holiday')) return 'holiday';
+  if (c.includes('festival')) return 'festival';
+  if (c.includes('work')) return 'work';
+  if (c.includes('deadline')) return 'deadline';
+  if (c.includes('personal')) return 'personal';
+  if (c.includes('birthday')) return 'birthday';
+
+  return 'holiday';
+}
+
+function mapStatus(status) {
+
+  const s = status.toLowerCase();
+
+  if (s.includes('completed')) return 'completed';
+  if (s.includes('progress')) return 'upcoming';
+  if (s.includes('today')) return 'today';
+
+  return 'upcoming';
+}
 
 /* ════════════════════════════════
    SIDEBAR
@@ -895,29 +944,72 @@ function openModal(ev=null) {
 function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); editId=null; }
 function closeOutside(e) { if (e.target===document.getElementById('modalOverlay')) closeModal(); }
 
-function saveEvent() {
+async function saveEvent() {
   const name = document.getElementById('fName').value.trim();
   const date = document.getElementById('fDate').value;
-  const time = document.getElementById('fTime').value;
   const cat  = document.getElementById('fCat').value;
   const notes= document.getElementById('fNotes').value.trim();
-  if (!name) { toast('⚠️','Please enter an occasion name.','var(--orange)'); return; }
-  if (!date) { toast('⚠️','Please select a date.','var(--orange)'); return; }
-  if (editId) {
-    const i = events.findIndex(e=>e.id===editId);
-    if (i!==-1) events[i]={...events[i],name,date,time,cat,notes};
-    toast('✅','Occasion updated!','var(--green)');
-  } else {
-    events.push({id:nxtId++,name,date,time,cat,notes});
-    toast('🎉','Occasion added!','var(--accent)');
+
+  if (!name) {
+    toast('⚠️','Please enter an occasion name.','var(--orange)');
+    return;
   }
-  closeModal(); refresh();
+
+  if (!date) {
+    toast('⚠️','Please select a date.','var(--orange)');
+    return;
+  }
+
+  const payload = {
+    action: editId ? 'updateEvent' : 'addEvent',
+    id: editId,
+    date: date,
+    name: name,
+    category: cat,
+    notes: notes,
+    status: 'Upcoming'
+  };
+
+  try {
+    await fetch(API_URL, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+
+    toast('✅', editId ? 'Occasion updated!' : 'Occasion added!', 'var(--green)');
+    closeModal();
+    loadEvents();
+
+  } catch (err) {
+    console.error(err);
+    toast('❌','Failed to save occasion.','var(--red)');
+  }
 }
 function editEvent(id) { openModal(events.find(e=>e.id===id)); }
-function deleteEvent(id) {
-  const row=document.getElementById('row-'+id);
-  if(row){row.style.cssText='opacity:0;transform:translateX(18px);transition:all .25s';}
-  setTimeout(()=>{ events=events.filter(e=>e.id!==id); refresh(); toast('🗑️','Event removed.','var(--red)'); },260);
+
+async function deleteEvent(id) {
+  const row = document.getElementById('row-' + id);
+
+  if (row) {
+    row.style.cssText = 'opacity:0;transform:translateX(18px);transition:all .25s';
+  }
+
+  try {
+    await fetch(API_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'deleteEvent',
+        id: id
+      })
+    });
+
+    toast('🗑️','Event removed.','var(--red)');
+    loadEvents();
+
+  } catch (err) {
+    console.error(err);
+    toast('❌','Failed to delete event.','var(--red)');
+  }
 }
 
 /* ════════════════════════════════
@@ -939,7 +1031,7 @@ function refresh() { renderStats(); renderNextEvent(); renderList(); }
 document.getElementById('todayStr').textContent =
   new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
 
-refresh();
+loadEvents();
 </script>
 </body>
 </html>
