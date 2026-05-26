@@ -366,10 +366,12 @@ body::before {
 .cat-deadline { background:rgba(248,113,113,0.12); color:var(--red);     border:1px solid rgba(248,113,113,0.25); }
 .cat-festival { background:rgba(251,146,60,0.12);  color:var(--orange);  border:1px solid rgba(251,146,60,0.25); }
 .cat-birthday { background:rgba(244,114,182,0.12); color:var(--pink);    border:1px solid rgba(244,114,182,0.25); }
+.cat-special {  background: rgba(0,255,180,0.12);   color: #00d9a6;   border: 1px solid rgba(0,255,180,0.25);
+}
 
 .status-upcoming  { background:rgba(79,142,247,0.12);  color:var(--accent); }
 .status-today     { background:rgba(52,211,153,0.12);  color:var(--green); }
-.status-completed { background:rgba(74,85,104,0.28);   color:var(--text3); }
+.status-completed { background: rgb(0 255 64 / 40%);    color: #f0f0f0e3; }
 
 .bar-holiday  { background:var(--accent); }
 .bar-work     { background:var(--green); }
@@ -377,6 +379,7 @@ body::before {
 .bar-deadline { background:var(--red); }
 .bar-festival { background:var(--orange); }
 .bar-birthday { background:var(--pink); }
+.bar-special {   background: #00d9a6; }
 
 /* ════════════════════════════════════════
    EVENTS TOPBAR
@@ -574,7 +577,7 @@ body::before {
     </div>
     <div class="nav-item" onclick="switchTab('events',this)">
       <span class="nav-icon"><i class="fa-solid fa-calendar-days"></i></span>
-      <span class="nav-label">Events</span>
+      <span class="nav-label">Occasions</span>
       <span class="nav-badge" id="sidebarBadge">0</span>
     </div>
   </nav>
@@ -618,12 +621,12 @@ body::before {
         <div class="rc-label"><i class="fa-solid fa-bell"></i>&nbsp; Reminder Window</div>
         <div class="rc-time">9 AM – 10 AM</div>
         <div class="rc-tag"><span class="pulse"></span>Daily trigger active</div>
-        <div class="rc-desc">Automated email reminders are dispatched every day within this window for all upcoming events.</div>
+        <div class="rc-desc">Automated email reminders are dispatched every day within this window for all upcoming Occasions.</div>
       </div>
 
       <!-- Next Upcoming Event -->
       <div class="nec">
-        <div class="nec-chip">Next Upcoming Event</div>
+        <div class="nec-chip">Next Upcoming Occasion</div>
         <div class="nec-name" id="d-nec-name">—</div>
         <div class="nec-date" id="d-nec-date"><i class="fa-regular fa-clock"></i>&nbsp;—</div>
         <div class="nec-foot">
@@ -641,22 +644,22 @@ body::before {
       <div class="stat-card">
         <div class="stat-icon" style="background:rgba(79,142,247,0.13);color:var(--accent)"><i class="fa-solid fa-layer-group"></i></div>
         <div class="stat-val" id="st-total">0</div>
-        <div class="stat-lbl">Total Events</div>
+        <div class="stat-lbl">Total Occasions</div>
       </div>
       <div class="stat-card">
         <div class="stat-icon" style="background:rgba(52,211,153,0.13);color:var(--green)"><i class="fa-solid fa-arrow-trend-up"></i></div>
         <div class="stat-val" id="st-upcoming">0</div>
-        <div class="stat-lbl">Upcoming Events</div>
+        <div class="stat-lbl">Upcoming Occasions</div>
       </div>
       <div class="stat-card">
         <div class="stat-icon" style="background:rgba(167,139,250,0.13);color:var(--purple)"><i class="fa-solid fa-circle-check"></i></div>
         <div class="stat-val" id="st-completed">0</div>
-        <div class="stat-lbl">Completed Events</div>
+        <div class="stat-lbl">Completed Occasions</div>
       </div>
       <div class="stat-card">
         <div class="stat-icon" style="background:rgba(244,114,182,0.13);color:var(--pink)"><i class="fa-solid fa-star"></i></div>
         <div class="stat-val" id="st-today">0</div>
-        <div class="stat-lbl">Today's Events</div>
+        <div class="stat-lbl">Today's Occasion</div>
       </div>
     </div>
   </div>
@@ -665,7 +668,7 @@ body::before {
   <div class="page" id="tab-events">
     <!-- Next event card on events tab -->
     <div class="nec" style="margin-bottom:22px;">
-      <div class="nec-chip">Next Upcoming Event</div>
+      <div class="nec-chip">Next Upcoming Occasion</div>
       <div class="nec-name" id="e-nec-name">—</div>
       <div class="nec-date" id="e-nec-date"><i class="fa-regular fa-clock"></i>&nbsp;—</div>
       <div class="nec-foot">
@@ -681,7 +684,7 @@ body::before {
     <div class="ev-bar">
       <div class="ev-bar-left">
         <div class="section-title">All Occasions</div>
-        <div class="section-sub">Manage, edit or remove scheduled events</div>
+        <div class="section-sub">Manage, edit or remove scheduled occasions</div>
       </div>
       <select class="sel" id="limitSel" onchange="renderList()">
         <option value="20" selected>Show 20</option>
@@ -729,6 +732,7 @@ body::before {
         <option value="deadline">⏰ Deadline</option>
         <option value="festival">🎊 Festival</option>
         <option value="birthday">🎂 Birthday</option>
+        <option value="special">✨ Special</option>
       </select>
     </div>
     <div class="fg">
@@ -763,7 +767,7 @@ function getStatus(ds) {
   return d < 0 ? 'completed' : d === 0 ? 'today' : 'upcoming';
 }
 function catLabel(c) {
-  return {holiday:'🌐 Holiday',work:'💼 Work',personal:'👤 Personal',deadline:'⏰ Deadline',festival:'🎊 Festival',birthday:'🎂 Birthday'}[c] || c;
+  return {holiday:'🌐 Holiday',work:'💼 Work',personal:'👤 Personal',deadline:'⏰ Deadline',festival:'🎊 Festival',birthday:'🎂 Birthday',special:'✨ Special'}[c] || c;
 }
 
 let events = [];
@@ -813,6 +817,7 @@ function mapCategory(cat) {
   if (c.includes('deadline')) return 'deadline';
   if (c.includes('personal')) return 'personal';
   if (c.includes('birthday')) return 'birthday';
+  if (c.includes('special')) return 'special';
 
   return 'holiday';
 }
@@ -850,8 +855,8 @@ function closeMobile() {
    TABS
 ════════════════════════════════ */
 const tabMeta = {
-  dashboard:{ title:'Dashboard', sub:'Overview of all scheduled reminders' },
-  events:   { title:'Events',    sub:'Manage and schedule your occasions' },
+  dashboard:{ title:'Z System Intelligent Control Private Limited', sub:'Overview of all scheduled reminders' },
+  Occasions:   { title:'Z System Intelligent Control Private Limited', sub:'Manage and schedule your occasions' },
 };
 function switchTab(name, el) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
